@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SmarthomeProtector</string>
+    <string name="choose_process_title">Choose the trusted Smarthome IoT App</string>
+
+</resources>
