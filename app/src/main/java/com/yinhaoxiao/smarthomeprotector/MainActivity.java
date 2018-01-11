@@ -21,11 +21,13 @@ public class MainActivity extends AppCompatActivity {
     private StableArrayAdapter mAppAdapter;
     public static String SelectedAppName = "";
     public static boolean RunningState = true;
-    public static Intent MonitorServiceIntent;
+    public static String CurrentIP;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        CurrentIP = Utils.getIPAddress(true); // get current IPv4 address
 
         mPackageManager = getPackageManager();
         List<ApplicationInfo> packages = mPackageManager.getInstalledApplications(PackageManager.GET_META_DATA);
@@ -48,12 +50,9 @@ public class MainActivity extends AppCompatActivity {
         mInstalledAppLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (MonitorServiceIntent == null) {
-                    MonitorServiceIntent = new Intent(MainActivity.this, MonitorService.class);
-                    SelectedAppName = mAppAdapter.getItem(position);
-                    startActivity(new Intent(MainActivity.this, StateActivity.class));
-                    startService(MonitorServiceIntent);
-                }
+                SelectedAppName = mAppAdapter.getItem(position);
+                startActivity(new Intent(MainActivity.this, StateActivity.class));
+
             }
         });
     }

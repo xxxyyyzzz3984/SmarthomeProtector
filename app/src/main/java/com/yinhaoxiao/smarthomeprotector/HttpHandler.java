@@ -1,5 +1,8 @@
 package com.yinhaoxiao.smarthomeprotector;
 
+import android.content.Context;
+import android.content.Intent;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -17,9 +20,16 @@ public class HttpHandler extends NanoHTTPD {
     public static String TargetIP;
     public static String TargetMAC;
     public static String DgOP;
+    private Context mMonitorServiceInst;
+    private boolean mUserDecision;
+    private int mCheckGapTime; // gap time to check user's decision, in ms
 
-    public HttpHandler(int port) {
+    public HttpHandler(int port, Context MonitorServiceInst) {
         super(port);
+        if (mMonitorServiceInst == null) {
+            mMonitorServiceInst = MonitorServiceInst;
+        }
+        this.mCheckGapTime = 500;
     }
 
     /**
@@ -33,7 +43,6 @@ public class HttpHandler extends NanoHTTPD {
      */
     @Override
     public Response serve(IHTTPSession session) {
-
         try {
             Map<String, String> params = session.getParms();
             session.parseBody(params);
@@ -42,11 +51,51 @@ public class HttpHandler extends NanoHTTPD {
             TargetIP = params.get("targetIP");
             TargetMAC = params.get("targetMAC");
             DgOP = params.get("dgOP");
+            HandleIP(AlertIP);
+
+            if (mUserDecision) {
+                return newFixedLengthResponse("{decision:allow}");
+            }
+            else {
+                return newFixedLengthResponse("{decision:deny}");
+            }
 
         } catch (IOException | ResponseException e) {
             e.printStackTrace();
         }
         return newFixedLengthResponse("");
+    }
+
+
+    private void HandleIP (String alertIP) {
+
+        // ip address does not match, directly go to AlertActivity
+        if (!alertIP.matches(MainActivity.CurrentIP)) {
+            Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
+            alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mMonitorServiceInst.startActivity(alertIntent);
+            this.mUserDecision = getUserDecision();
+        }
+
+        // ip address matches, need further analysis
+        else {
+        }
+    }
+
+    private boolean getUserDecision() {
+        while (AlertActivity.UserDecision < 0) {
+            try {
+                Thread.sleep(mCheckGapTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (AlertActivity.UserDecision == 1) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
 }

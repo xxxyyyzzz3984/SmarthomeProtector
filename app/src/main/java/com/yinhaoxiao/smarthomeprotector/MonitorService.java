@@ -12,8 +12,13 @@ public class MonitorService extends Service {
 //    private int mDelayTime = 3000;
     public static HttpHandler HttpNotifiRunner;
     private static int RecvPort = 8888;
+    private int mSideChannelSize = 50;
+
     public MonitorService() {
-        HttpNotifiRunner = new HttpHandler(RecvPort);
+
+        if (HttpNotifiRunner == null) {
+            HttpNotifiRunner = new HttpHandler(RecvPort, this);
+        }
     }
 
     @Nullable
@@ -24,24 +29,25 @@ public class MonitorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         // Background Monitor Service has been started
         Toast.makeText(this, "Monitor service has been activated!", Toast.LENGTH_SHORT).show();
 
-        Thread NetworkThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    HttpNotifiRunner.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        NetworkThread.start();
-
+        try {
+            HttpNotifiRunner.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
 
+    /**
+     * This function constantly retrieves target app's states:
+     * VSS
+     * TCP_SND
+     */
+    private void retrieveTargetAppStates() {
 
+    }
 }

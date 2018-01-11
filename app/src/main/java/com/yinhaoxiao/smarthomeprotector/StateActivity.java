@@ -1,5 +1,6 @@
 package com.yinhaoxiao.smarthomeprotector;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -10,10 +11,15 @@ import android.widget.TextView;
 public class StateActivity extends AppCompatActivity {
     private Button mRunBtn;
     private TextView mRunTextView;
+    private Intent mMonitorServiceIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_state);
+
+        mMonitorServiceIntent = new Intent(this, MonitorService.class);
+        startService(mMonitorServiceIntent);
 
         mRunTextView= (TextView) findViewById(R.id.runningstateTV);
         mRunBtn = (Button) findViewById(R.id.runBtn);
@@ -24,7 +30,7 @@ public class StateActivity extends AppCompatActivity {
                     mRunBtn.setText("Run");
                     mRunTextView.setText("Inactive");
                     MainActivity.RunningState = false;
-                    stopService(MainActivity.MonitorServiceIntent);
+                    stopService(mMonitorServiceIntent);
                     try {
                         MonitorService.HttpNotifiRunner.stop();
                     } catch (Exception e) {
@@ -35,9 +41,10 @@ public class StateActivity extends AppCompatActivity {
                     mRunBtn.setText("Stop");
                     mRunTextView.setText("Running");
                     MainActivity.RunningState = true;
-                    startService(MainActivity.MonitorServiceIntent);
+                    startService(mMonitorServiceIntent);
                 }
             }
         });
     }
+
 }
