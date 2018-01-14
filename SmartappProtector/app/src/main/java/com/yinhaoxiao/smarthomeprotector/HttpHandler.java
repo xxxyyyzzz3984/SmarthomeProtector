@@ -26,10 +26,11 @@ public class HttpHandler extends NanoHTTPD {
 
     public HttpHandler(int port, Context MonitorServiceInst) {
         super(port);
+        System.out.println("Here http init");
         if (mMonitorServiceInst == null) {
             mMonitorServiceInst = MonitorServiceInst;
         }
-        this.mCheckGapTime = 500;
+        this.mCheckGapTime = 100;
     }
 
     /**
@@ -44,6 +45,7 @@ public class HttpHandler extends NanoHTTPD {
     @Override
     public Response serve(IHTTPSession session) {
         try {
+            System.out.println("Here serve0");
             Map<String, String> params = session.getParms();
             session.parseBody(params);
             AlertIP = params.get("alertIP");
@@ -51,6 +53,8 @@ public class HttpHandler extends NanoHTTPD {
             TargetIP = params.get("targetIP");
             TargetMAC = params.get("targetMAC");
             DgOP = params.get("dgOP");
+            System.out.println("Here serve1");
+
             HandleIP(AlertIP);
 
             if (mUserDecision) {
@@ -79,7 +83,33 @@ public class HttpHandler extends NanoHTTPD {
 
         // ip address matches, need further analysis
         else {
+            //First, simply check if the target app is running
+            long Min_vss = MonitorService.findMinIndex(MonitorService.mTargetVSSList);
+            long Delta_tcpsnd = MonitorService.mTargetTcpSndList.get(MonitorService.mTargetTcpSndList.size()-1)
+                    - MonitorService.mTargetTcpSndList.get(0);
+
+            // if the app is not running
+            if (Min_vss < 10) {
+                Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
+                alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mMonitorServiceInst.startActivity(alertIntent);
+                this.mUserDecision = getUserDecision();
+            }
+
+            // if the app did not send a traffic
+            else if (Delta_tcpsnd < 10) {
+                Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
+                alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mMonitorServiceInst.startActivity(alertIntent);
+                this.mUserDecision = getUserDecision();
+            }
+
+            // (TEST)
+            else {
+                this.mUserDecision = true;
+            }
         }
+        AlertActivity.UserDecision = -1;
     }
 
     private boolean getUserDecision() {

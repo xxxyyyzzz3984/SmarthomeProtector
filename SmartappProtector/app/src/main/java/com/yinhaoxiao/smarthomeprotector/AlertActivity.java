@@ -30,6 +30,7 @@ public class AlertActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 UserDecision = 1;
+                AlertActivity.this.finish();
             }
         });
 
@@ -38,6 +39,8 @@ public class AlertActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 UserDecision = 2;
+                AlertActivity.this.finish();
+
             }
         });
     }
