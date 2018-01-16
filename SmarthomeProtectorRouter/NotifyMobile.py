@@ -17,7 +17,7 @@ class Notifier:
 
     def sendData(self):
         r = requests.post('http://' + self.MobileIP + ":" + str(self.MobilePort), data=self.data)
-        print r.text
+        return r.text
 
 
 # test = Notifier('128.164.68.232', 8888)
