@@ -16,8 +16,12 @@ class Notifier:
         }
 
     def sendData(self):
-        r = requests.post('http://' + self.MobileIP + ":" + str(self.MobilePort), data=self.data)
-        return r.text
+        try:
+            r = requests.post('http://' + self.MobileIP + ":" + str(self.MobilePort), data=self.data)
+            return r.text
+        except:
+            return 'Deny'
+
 
 
 # test = Notifier('128.164.68.232', 8888)

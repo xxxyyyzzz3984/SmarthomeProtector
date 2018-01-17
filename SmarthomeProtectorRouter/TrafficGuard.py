@@ -1,9 +1,16 @@
+import os
+import threading
+
 import dpkt
 import datetime
 import socket
 import ConfigParser
 import pcap
+import time
+
+import thread
 from dpkt.compat import compat_ord
+import netifaces as ni
 
 from RedirectTrafficServer import RedirectServer
 from NotifyMobile import Notifier
@@ -33,6 +40,20 @@ def inet_to_str(inet):
         return socket.inet_ntop(socket.AF_INET, inet)
     except ValueError:
         return socket.inet_ntop(socket.AF_INET6, inet)
+
+def exit_program(rule_runner, listen_port):
+    while True:
+        user_input = raw_input()
+        if user_input == 'q':
+            rule_runner.delete_rule()
+            os.system('kill -9 $(sudo lsof -t -i:%d)' % listen_port)
+            thread.interrupt_main()
+            os._exit(1)
+
+def getCurrentIP(interface):
+    ni.ifaddresses(interface)
+    ip = ni.ifaddresses(interface)[ni.AF_INET][0]['addr']
+    return ip
 
 
 def print_packets(pcap):
@@ -66,7 +87,7 @@ def print_packets(pcap):
         fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
 
         # Print out the info
-        print('IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)\n' % \
+        print('IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)\n' %
               (inet_to_str(ip.src), inet_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset))
 
 
@@ -85,24 +106,33 @@ class TrafficGuard():
         self.OpDesctip = self.__ConfigSectionMap(self.TargetIoTConfig, "STAT")["desciption"]
         self.SmartphoneIP = self.__ConfigSectionMap(self.SmartphoneConfig, "STAT")["ipaddr"]
         self.SmartphoneNotifyPort = self.__ConfigSectionMap(self.SmartphoneConfig, "STAT")["notifyport"]
+        self.RouterIP = getCurrentIP('wlp2s0')
+        self.RecoverTime = 5 ## recover time in seconds
         self.AlertMAC = ""
         self.AlertIP = ""
 
         ## set up redirect server
         self.RedirectServer = RedirectServer(self.TargetIoTIP, int(self.TargetIoTPort), self.RedirectLocalPort)
-
+        self.RedirectServer.start_redirect()
         ## set up mobile notifier
         self.MobileNotifier = Notifier(self.SmartphoneIP, self.SmartphoneNotifyPort)
 
         ## set up traffic guard
-        self.RuleHandlerRunner = RuleHandler(self.TargetIoTIP, self.RedirectLocalPort)
+        self.RuleHandlerRunner = RuleHandler(self.RouterIP,
+                                             self.TargetIoTIP, self.RedirectLocalPort)
         self.RuleHandlerRunner.add_rule()
 
         ## live pcap instance
         self.LivePcap = pcap.pcap()
 
+        ## set up exit trigger
+        exit_thread = threading.Thread(target=exit_program,
+                                       args=(self.RuleHandlerRunner, self.RedirectLocalPort, ))
+        exit_thread.start()
+
     def handleTraffic(self):
-        print 'begin to capture'
+        print 'Monitor is up!'
+        print 'Press \'q\' to exit the program.'
         for timestamp, buf in self.LivePcap:
             eth = dpkt.ethernet.Ethernet(buf)
             ip = eth.data
@@ -116,18 +146,27 @@ class TrafficGuard():
             captured_dst_ip = inet_to_str(ip.dst)
 
             try:
-                # if captured_dst_ip == self.TargetIoTIP:
-                    ## a traffic matches a sensitive one, send notify
-                if self.OpKeyWord in ip.data.data:
+                if self.OpKeyWord in ip.data.data and self.AlertIP != self.RouterIP:
+                    print 'Sensitive message captured!'
                     print self.AlertIP + "--->" + captured_dst_ip
                     self.MobileNotifier.\
                         setData(self.AlertIP, self.AlertMAC, self.TargetIoTIP, self.TargetIoTMac, self.OpDesctip)
                     user_decision = self.MobileNotifier.sendData()
-                    if "allow" or "Allow" in user_decision:
-                        self.RuleHandlerRunner.delete_rule()
-                        self.RedirectServer.isRedirect = True
+                    print 'user decision' + user_decision
 
-                    self.RuleHandlerRunner.add_rule()
+                    if "allow" in user_decision or "Allow" in user_decision:
+                        print 'user allow'
+                        self.RedirectServer.setDecision(True)
+
+                    else:
+                        print 'user decline'
+                        self.RedirectServer.setDecision(False)
+
+                    os.system('kill -9 $(sudo lsof -t -i:%d)' % self.RedirectLocalPort)
+                    self.RedirectServer.start_redirect()
+
+                    # recover_thread = threading.Thread(target=self.__briefRecover)
+                    # recover_thread.start()
 
             except TypeError:
                 continue
@@ -145,6 +184,11 @@ class TrafficGuard():
                 dict1[option] = None
         return dict1
 
+    ## disable the redirect rule briefly to let the device recover
+    def __briefRecover(self):
+        self.RuleHandlerRunner.delete_rule()
+        time.sleep(self.RecoverTime)
+        self.RuleHandlerRunner.add_rule()
 
 TrafficSnifferRunner = TrafficGuard("./smartiot_config/wemo_smartswitch1.config")
 TrafficSnifferRunner.handleTraffic()

@@ -91,7 +91,12 @@ public class MonitorService extends Service {
         }
 
         catch (IndexOutOfBoundsException e) {
-            // cannot get system states of the process, exit
+            // cannot get system states of the process, re-initiate and exit
+
+            mTargetTcpSndList.clear();
+            mTargetVSSList.clear();
+            mTargetTcpSndList.add(0L);
+            mTargetVSSList.add(0L);
             return;
         }
 
@@ -106,6 +111,9 @@ public class MonitorService extends Service {
         while ((line = in.readLine()) != null) {
             tcp_snd_str += line;
         }
+
+//        System.out.println("tcp data: " + tcp_snd_str);
+//        System.out.println("vss data: " + mTargetProcess.vsize);
 
         try {
             mTargetTcpSndList.add(Long.parseLong(tcp_snd_str));

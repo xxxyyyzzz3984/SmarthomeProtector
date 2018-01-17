@@ -84,12 +84,13 @@ public class HttpHandler extends NanoHTTPD {
         // ip address matches, need further analysis
         else {
             //First, simply check if the target app is running
-            long Min_vss = MonitorService.findMinIndex(MonitorService.mTargetVSSList);
+            int Min_vss_index = MonitorService.findMinIndex(MonitorService.mTargetVSSList);
+            long Min_vss = MonitorService.mTargetVSSList.get(Min_vss_index);
             long Delta_tcpsnd = MonitorService.mTargetTcpSndList.get(MonitorService.mTargetTcpSndList.size()-1)
                     - MonitorService.mTargetTcpSndList.get(0);
 
             // if the app is not running
-            if (Min_vss < 10) {
+            if (Min_vss < 100) {
                 Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
                 alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mMonitorServiceInst.startActivity(alertIntent);
@@ -97,7 +98,7 @@ public class HttpHandler extends NanoHTTPD {
             }
 
             // if the app did not send a traffic
-            else if (Delta_tcpsnd < 10) {
+            else if (Delta_tcpsnd < 100) {
                 Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
                 alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mMonitorServiceInst.startActivity(alertIntent);

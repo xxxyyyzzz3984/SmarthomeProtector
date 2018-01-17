@@ -1,13 +1,15 @@
 import os
 
 class RuleHandler:
-    def __init__(self, IoTIP, Redirect_Localport):
+    def __init__(self, RouterIP, IoTIP, Redirect_Localport):
         self.iot_ip = IoTIP
+        self.router_ip = RouterIP
         self.redirect_port = Redirect_Localport
 
     def add_rule(self):
         os.system("iptables -t nat -A PREROUTING -p tcp"
-                  " -d %s -j DNAT --to 127.0.0.1:%d" % (self.iot_ip, self.redirect_port))
+                  " -d %s ! -s %s -j DNAT --to %s:%d"
+                  % (self.iot_ip, self.router_ip, self.router_ip, self.redirect_port))
 
     def delete_rule(self):
         os.system("iptables -t nat -D PREROUTING 1")
