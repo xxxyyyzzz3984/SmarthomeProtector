@@ -29,7 +29,6 @@ class RedirectServer():
     def start_redirect(self):
         t1 = threading.Thread(target=self.__handle_redict)
         t1.start()
-        print self.iot_ip
         self.iot_nc = nclib.Netcat((self.iot_ip, self.iot_port))
         t2 = threading.Thread(target=self.__send_packet)
         t2.start()

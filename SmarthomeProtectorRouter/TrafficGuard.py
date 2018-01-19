@@ -12,6 +12,7 @@ import thread
 from dpkt.compat import compat_ord
 import netifaces as ni
 
+from ArpHandler import ArpHandler
 from RedirectTrafficServer import RedirectServer
 from NotifyMobile import Notifier
 from RuleHandler import RuleHandler
@@ -46,6 +47,7 @@ def exit_program(rule_runner, listen_port):
         user_input = raw_input()
         if user_input == 'q':
             rule_runner.delete_rule()
+            os.system('killall arpspoof')
             os.system('kill -9 $(sudo lsof -t -i:%d)' % listen_port)
             thread.interrupt_main()
             os._exit(1)
@@ -102,11 +104,13 @@ class TrafficGuard():
         self.TargetIoTIP = self.__ConfigSectionMap(self.TargetIoTConfig, "STAT")["ipaddr"]
         self.TargetIoTMac = self.__ConfigSectionMap(self.TargetIoTConfig, "STAT")["mac"]
         self.TargetIoTPort = self.__ConfigSectionMap(self.TargetIoTConfig, "STAT")["port"]
+        self.TargetIoTPressible = self.__ConfigSectionMap(self.TargetIoTConfig, "STAT")["pressible"]
         self.RedirectLocalPort = 4444
         self.OpDesctip = self.__ConfigSectionMap(self.TargetIoTConfig, "STAT")["desciption"]
         self.SmartphoneIP = self.__ConfigSectionMap(self.SmartphoneConfig, "STAT")["ipaddr"]
         self.SmartphoneNotifyPort = self.__ConfigSectionMap(self.SmartphoneConfig, "STAT")["notifyport"]
-        self.RouterIP = getCurrentIP('wlp2s0')
+        self.interface = "wlp2s0"
+        self.RouterIP = getCurrentIP(self.interface)
         self.RecoverTime = 5 ## recover time in seconds
         self.AlertMAC = ""
         self.AlertIP = ""
@@ -123,12 +127,16 @@ class TrafficGuard():
         self.RuleHandlerRunner.add_rule()
 
         ## live pcap instance
-        self.LivePcap = pcap.pcap()
+        self.LivePcap = pcap.pcap(name=self.interface)
 
         ## set up exit trigger
         exit_thread = threading.Thread(target=exit_program,
                                        args=(self.RuleHandlerRunner, self.RedirectLocalPort, ))
         exit_thread.start()
+
+        ## set up arp spoof
+        arphandler = ArpHandler(self.interface)
+        arphandler.do_spoof()
 
     def handleTraffic(self):
         print 'Monitor is up!'
@@ -150,7 +158,7 @@ class TrafficGuard():
                     print 'Sensitive message captured!'
                     print self.AlertIP + "--->" + captured_dst_ip
                     self.MobileNotifier.\
-                        setData(self.AlertIP, self.AlertMAC, self.TargetIoTIP, self.TargetIoTMac, self.OpDesctip)
+                        setData(self.AlertIP, self.AlertMAC, self.TargetIoTIP, self.TargetIoTMac, self.OpDesctip, self.TargetIoTPressible)
                     user_decision = self.MobileNotifier.sendData()
                     print 'user decision' + user_decision
 

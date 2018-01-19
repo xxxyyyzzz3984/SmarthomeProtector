@@ -6,13 +6,14 @@ class Notifier:
         self.MobilePort = port
 
 
-    def setData(self, alertIP, alertMAC, targetIP, targetMAC, dgOP):
+    def setData(self, alertIP, alertMAC, targetIP, targetMAC, dgOP, pressible):
         self.data = {
             'alertIP': alertIP,
             'alertMAC': alertMAC,
             'targetIP': targetIP,
             'targetMAC': targetMAC,
-            'dgOP': dgOP
+            'dgOP': dgOP,
+            'pressible': pressible
         }
 
     def sendData(self):

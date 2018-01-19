@@ -18,7 +18,7 @@ public class MonitorService extends Service {
     public static HttpHandler HttpNotifiRunner;
     private static int RecvPort = 8888;
     private int mSideChannelSize = 30;
-    private int mTimeGap4RetrState = 300;
+    private int mTimeGap4RetrState = 100;
     private ProcessManager.Process mTargetProcess;
     public static List<Long> mTargetVSSList;
     public static List<Long> mTargetTcpSndList;

@@ -20,6 +20,7 @@ public class HttpHandler extends NanoHTTPD {
     public static String TargetIP;
     public static String TargetMAC;
     public static String DgOP;
+    public static Boolean Pressible;
     private Context mMonitorServiceInst;
     private boolean mUserDecision;
     private int mCheckGapTime; // gap time to check user's decision, in ms
@@ -53,6 +54,13 @@ public class HttpHandler extends NanoHTTPD {
             TargetIP = params.get("targetIP");
             TargetMAC = params.get("targetMAC");
             DgOP = params.get("dgOP");
+            if (params.get("pressible").contains("True")) {
+                Pressible = true;
+            }
+            else {
+                Pressible = false;
+            }
+
             System.out.println("Here serve1");
 
             HandleIP(AlertIP);
@@ -74,7 +82,7 @@ public class HttpHandler extends NanoHTTPD {
     private void HandleIP (String alertIP) {
 
         // ip address does not match, directly go to AlertActivity
-        if (!alertIP.matches(MainActivity.CurrentIP)) {
+        if (!alertIP.matches(MainActivity.CurrentIP) && !alertIP.matches(HttpHandler.TargetIP)) {
             Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
             alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             mMonitorServiceInst.startActivity(alertIntent);
@@ -91,6 +99,7 @@ public class HttpHandler extends NanoHTTPD {
 
             // if the app is not running
             if (Min_vss < 100) {
+                System.out.println("target vss list: " + MonitorService.mTargetVSSList);
                 Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
                 alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mMonitorServiceInst.startActivity(alertIntent);
@@ -99,6 +108,8 @@ public class HttpHandler extends NanoHTTPD {
 
             // if the app did not send a traffic
             else if (Delta_tcpsnd < 100) {
+                System.out.println("target tcp list: " + MonitorService.mTargetTcpSndList);
+
                 Intent alertIntent = new Intent(mMonitorServiceInst, AlertActivity.class);
                 alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mMonitorServiceInst.startActivity(alertIntent);
