@@ -5,24 +5,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:fbutton="http://schemas.android.com/apk/res-auto"
-    android:background="@color/colorGrey"
+    android:background="@color/colorBlack"
     tools:context="com.yinhaoxiao.smarthomeprotector.AlertActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
+        <!--<TextView-->
+            <!--android:id="@+id/textView2"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_centerHorizontal="true"-->
+            <!--android:layout_marginTop="20dp"-->
+            <!--android:textAlignment="center"-->
+            <!--android:textSize="40dp"-->
+            <!--android:background="@drawable/textviewborder"-->
+            <!--android:textColor="@color/colorRed"-->
+            <!--android:text="@string/Alert_Title"-->
+            <!--/>-->
+
+        <com.romainpiel.shimmer.ShimmerTextView
             android:id="@+id/textView2"
+            android:textAlignment="center"
+            android:text="@string/Alert_Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
-            android:textAlignment="center"
-            android:textSize="40dp"
             android:textColor="@color/colorRed"
-            android:text="@string/Alert_Title"
-            />
+            android:textSize="40dp"/>
 
         <TextView
             android:id="@+id/AlertActIPTV"

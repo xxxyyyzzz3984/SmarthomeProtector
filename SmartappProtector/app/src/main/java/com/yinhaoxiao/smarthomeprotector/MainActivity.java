@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
                 // system app, ignore
                 continue;
             }
+
             appList.add(SinglePackageName);
         }
         mAppAdapter = new StableArrayAdapter(this, android.R.layout.simple_list_item_1, appList);
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 SelectedAppName = mAppAdapter.getItem(position);
-                startActivity(new Intent(MainActivity.this, StateActivity.class));
+                startActivity(new Intent(MainActivity.this, BeautifulStateActivity.class));
 
             }
         });

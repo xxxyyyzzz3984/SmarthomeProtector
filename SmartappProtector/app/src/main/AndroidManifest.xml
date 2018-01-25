@@ -26,7 +26,8 @@
             android:exported="true" />
 
         <activity android:name=".StateActivity" />
-        <activity android:name=".AlertActivity"></activity>
+        <activity android:name=".AlertActivity" />
+        <activity android:name=".BeautifulStateActivity"></activity>
     </application>
 
 </manifest>

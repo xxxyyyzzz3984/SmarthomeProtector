@@ -30,4 +30,6 @@ dependencies {
     compile 'info.hoang8f:fbutton:1.0.5'
     compile 'eu.chainfire:libsuperuser:1.0.0.+'
     testCompile 'junit:junit:4.12'
+    compile 'com.skyfishjy.ripplebackground:library:1.0.1'
+    compile 'com.romainpiel.shimmer:library:1.4.0@aar'
 }
